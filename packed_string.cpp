@@ -1,6 +1,8 @@
 #include <glog/logging.h>
 #include <climits>
 
+namespace math {
+
 //! computes ceil(dividend/divisor)
 template<class T>
 constexpr T ceil_div(const T& dividend, const T& divisor) { 
@@ -10,6 +12,8 @@ constexpr T ceil_div(const T& dividend, const T& divisor) {
 constexpr int most_significant_bit(const uint64_t& x) {
     return x == 0 ? -1 : (sizeof(uint64_t)*8-1) - __builtin_clzll(x);
 }
+
+}//ns
 
 namespace packed_character {
 #ifdef NDEBUG
@@ -22,7 +26,7 @@ static constexpr size_t FIT_CHARS = sizeof(uint64_t)/sizeof(char);
 
 //! number of characters stored in packed_character a
 constexpr uint_fast8_t char_size(const uint64_t &a) {
-   return a == 0 ? 0 : (most_significant_bit(a)/CHAR_BIT + 1);
+   return a == 0 ? 0 : (math::most_significant_bit(a)/CHAR_BIT + 1);
 }
 
 //! longest common prefix of two packed characters
@@ -54,6 +58,11 @@ uint64_t construct(const char* str, size_t from, uint_fast8_t length) {
    DCHECK_LE(length, FIT_CHARS);
    return truncate(construct(str,from), length);
 }
+uint64_t construct(const std::string& str, size_t from) {
+   DCHECK_LT(from, str.length());
+   return (from+ CHAR_BIT <= str.length()) ? construct(str.c_str(), from) : construct(str.c_str(), from, str.length()-from);
+      // : construct(str.c_str(), from) & ((-1ULL)>>(64-(str.length()-from)*CHAR_BIT));
+}
 
 }//ns
 
@@ -79,38 +88,57 @@ private:
 };
 
 std::string random_string(const random_char& rnd_gen, size_t length) {
-	std::string s(length+1, '\0');
+	std::string s(length, '\0');
 	std::generate_n(s.begin(), length, rnd_gen);
 	// s[length] = '\0';
 	return s;
 }
 
+
+void test_packed_character(const std::string& input) {
+   const size_t packed_string_length = ceil_div(input.length(),packed_character::FIT_CHARS);
+   uint64_t* packed_string = new uint64_t[packed_string_length];
+   for(size_t i = 0; i < packed_string_length; ++i) {
+      packed_string[i] = packed_character::construct(input,i*packed_character::FIT_CHARS);
+      for(size_t j = 0; i*packed_character::FIT_CHARS+j < input.length() && j < packed_character::FIT_CHARS; ++j) {
+         DCHECK_EQ(packed_character::character(packed_string[i],j), input[i*packed_character::FIT_CHARS+j]);
+      }
+   }
+
+   //select a random packed char 
+   //
+   const size_t packed_index = random_size(input.length()/packed_character::FIT_CHARS);
+   const uint64_t packed_char = packed_string[packed_index];
+   const uint_fast8_t packed_length = packed_character::char_size(packed_char);
+   if(packed_length != packed_character::FIT_CHARS) {
+      DCHECK_EQ(packed_length, input.length()-(packed_string_length-1)*packed_character::FIT_CHARS);
+   }
+
+
+   const size_t begin  = random_size(packed_length);
+   const size_t length = random_size(packed_length-begin)+1;
+   const uint64_t sub_char = packed_character::substring(packed_char, begin, length);
+   const uint_fast8_t sub_length = packed_character::char_size(sub_char);
+   DCHECK_EQ(sub_length, length);
+
+   DCHECK_EQ(sub_char, packed_character::construct(input.c_str(),packed_index*packed_character::FIT_CHARS+begin, length));
+
+   // if(sub_length < length) {
+   //    DCHECK_EQ(packed_index, packed_string_length);
+   //    DCHECK_EQ(packed_character::char_size(sub_char), input.length() - (packed_string_length-1)*packed_character::FIT_CHARS);
+   // }
+   for(size_t j = 0; j < packed_character::char_size(sub_char); ++j) {
+      DCHECK_EQ(packed_character::character(sub_char, j), input[packed_index*packed_character::FIT_CHARS+begin+j]);
+   }
+   delete [] packed_string;
+}
+
+
 int main() {
    random_char rnd_gen;
    while(1) {
-      std::string s = random_string(rnd_gen, 35);
-      const size_t section_length = s.length()/packed_character::FIT_CHARS;
-      uint64_t* arr = new uint64_t[section_length];
-      for(size_t i = 0; i < s.length()/packed_character::FIT_CHARS; ++i) {
-         arr[i] = packed_character::construct(s.c_str(),i*packed_character::FIT_CHARS);
-         for(size_t j = 0; j < packed_character::FIT_CHARS; ++j) {
-            DCHECK_EQ(packed_character::character(arr[i],j), s[i*packed_character::FIT_CHARS+j]);
-         }
-      }
-      const size_t section = random_size(s.length()/packed_character::FIT_CHARS);
-      const size_t begin = random_size(packed_character::FIT_CHARS);
-      const size_t length = random_size(packed_character::FIT_CHARS-begin)+1;
-      const uint64_t sub = packed_character::substring(arr[section], begin, length);
-
-      DCHECK_EQ(sub, packed_character::construct(s.c_str(),section*packed_character::FIT_CHARS+begin, length));
-
-      if(packed_character::char_size(sub) < length) {
-         DCHECK_EQ(section, section_length);
-         DCHECK_EQ(packed_character::char_size(sub), s.length() - (section_length-1)*packed_character::FIT_CHARS);
-      }
-      for(size_t j = 0; j < packed_character::char_size(sub); ++j) {
-         DCHECK_EQ(packed_character::character(sub, j), s[section*packed_character::FIT_CHARS+begin+j]);
-      }
+      std::string input = random_string(rnd_gen, random_size(1000)+1);
+      test_packed_character(input);
       
 
       // for(size_t i = 0; i < s.length()/packed_character::FIT_CHARS; ++i) {
@@ -118,7 +146,6 @@ int main() {
       //       DCHECK_EQ(packed_character::character(arr[i],j), s[i*packed_character::FIT_CHARS+j]);
       //    }
 
-         delete [] arr;
       }
    }
 
