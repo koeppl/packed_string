@@ -1,36 +1,9 @@
 #include <celero/Celero.h>
 #include "lce.hpp"
+#include "lceinstance.hpp"
 
 CELERO_MAIN
 
-class LCEInstance {
-   public:
-      const size_t m_length;
-      const size_t m_position;
-      char*const m_stra;
-      char*const m_strb;
-      size_t index;
-      LCEInstance(size_t length)
-	 : m_length(length)
-	   , m_position(m_length-1)
-	   , m_stra(reinterpret_cast<char*>(aligned_alloc(32, m_length+1)))
-	   , m_strb(reinterpret_cast<char*>(aligned_alloc(32, m_length+1)))
-
-   {
-      random_char rnd_gen;
-      std::string input = random_string(rnd_gen, m_length);
-      for(size_t i = 0; i < input.size(); ++i) {
-	 m_stra[i] = m_strb[i] = input[i];
-      }
-      m_stra[length] = m_strb[length] = 0;
-      m_strb[m_position] = m_stra[m_position]+1;
-   }
-      // ~LCEInstance() {
-	//  free(m_stra);
-	//  free(m_strb);
-      // }
-
-};
 
 class LCEFixture : public celero::TestFixture {
 
@@ -44,7 +17,7 @@ class LCEFixture : public celero::TestFixture {
 
    public:
 
-   LCEInstance& instance() const {
+   const LCEInstance& instance() const {
       return *m_instances[m_current_instance];
    }
 
@@ -55,7 +28,8 @@ class LCEFixture : public celero::TestFixture {
    {
       for(size_t i = 0; i < m_instance_length; ++i) {
 	 m_problemspace[i] = {static_cast<int64_t>(i)};
-	 m_instances[i] = new LCEInstance(6 + (2ULL<<(i+4)));
+	 const size_t size = 6 + (2ULL<<(i+4));
+	 m_instances[i] = new LCEInstance(size, size-1);
 	 DCHECK_LT(static_cast<uint64_t>(m_problemspace[i].Value), m_instance_length);
       }
    }
@@ -86,14 +60,21 @@ class LCEFixture : public celero::TestFixture {
 
 
 
-// BASELINE_F(LCE, Naive, LCEFixture, 0, 10000)
-// {
-//    celero::DoNotOptimizeAway(longest_common_prefix_naive(instance().m_stra, instance().m_strb));
-// }
-BASELINE_F(LCE, Packed, LCEFixture, 0, 10000)
+BASELINE_F(LCE, Naive, LCEFixture, 0, 10000)
+{
+   celero::DoNotOptimizeAway(longest_common_prefix_naive(instance().m_stra, instance().m_strb));
+}
+
+BENCHMARK_F(LCE, character, LCEFixture, 0, 10000)
+{
+   celero::DoNotOptimizeAway(longest_common_prefix_character(instance().m_stra, instance().m_length, instance().m_strb, instance().m_length));
+}
+
+BENCHMARK_F(LCE, packed, LCEFixture, 0, 10000)
 {
    celero::DoNotOptimizeAway(longest_common_prefix_packed(instance().m_stra, instance().m_length, instance().m_strb, instance().m_length));
 }
+
 
 #ifdef __SSE2__ 
 BENCHMARK_F(LCE, sse, LCEFixture, 0, 10000)

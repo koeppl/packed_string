@@ -1,28 +1,30 @@
 #include <iostream>
 #include "lce.hpp"
+#include "lceinstance.hpp"
+#include <gtest/gtest.h>
 
-int main() {
 
-   while( 1 ) {
-      random_char rnd_gen;
-      std::string input = random_string(rnd_gen, random_size(100000)+1);
-      char* in1 = reinterpret_cast<char*>(aligned_alloc(32, input.size()));
-      char* in2 = reinterpret_cast<char*>(aligned_alloc(32, input.size()));
-      for(size_t i = 0; i < input.size(); ++i) {
-	 in1[i] = in2[i] = input[i];
+constexpr size_t TEST_LENGTH = 100;
+void test_lce(size_t (*lce)(const char*, size_t, const char*, size_t)) {
+   for(size_t test_length = 0; test_length < TEST_LENGTH; ++test_length) {
+      for(size_t test_position = 0; test_position < test_length; ++test_position) {
+	 LCEInstance instance(test_length, test_position);
+	 ASSERT_EQ(lce(instance.m_stra, instance.m_length, instance.m_strb, instance.m_length), test_position);
       }
-
-      const size_t pos = random_size(input.size()); //input.size());
-      in2[pos] = in1[pos]+1;
-
-
-      // DCHECK_EQ(longest_common_prefix_packed(in1,input.size(), in2, input.size()), pos);
-      // DCHECK_EQ(longest_common_prefix(in1,in2), pos);
-      //std::cout << longest_common_prefix(in1,in2) << " : "  <<  longest_common_prefix_avx2(in1,input.length(), in2, input.length()) << std::endl;
-      DCHECK_EQ(longest_common_prefix_naive(in1,in2), longest_common_prefix_sse(in1,input.length(), in2, input.length()));
-   //   DCHECK_EQ(longest_common_prefix(in1,in2), longest_common_prefix(std::string(in1),std::string(in2)));
-
-      free(in1);
-      free(in2);
    }
+}
+
+
+TEST(LCE, character) {  test_lce(longest_common_prefix_character); } 
+TEST(LCE, packed) {  test_lce(longest_common_prefix_packed); }
+#ifdef __SSE2__ 
+TEST(LCE, sse) {  test_lce(longest_common_prefix_sse); }
+#endif
+#ifdef __AVX2__
+TEST(LCE, avx2) {  test_lce(longest_common_prefix_avx2); }
+#endif
+
+int main(int argc, char **argv) {
+   ::testing::InitGoogleTest(&argc, argv);
+   return RUN_ALL_TESTS();
 }

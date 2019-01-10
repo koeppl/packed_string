@@ -10,6 +10,14 @@ size_t longest_common_prefix_naive(const char* a, const char* b) {
    return i == 0 ? 0 : i-1;
 }
 
+size_t longest_common_prefix_character(const char* a, const size_t a_length, const char* b, const size_t b_length) {
+   const size_t min_length = std::min(a_length, b_length);
+   for(size_t i = 0; i < min_length; ++i) {
+      if(a[i] != b[i]) return i;
+   }
+   return min_length;
+}
+
 size_t longest_common_prefix_packed(const char* a, const size_t a_length, const char* b, const size_t b_length) {
    const size_t min_length = std::min(a_length, b_length)/packed_character::FIT_CHARS;
    for(size_t i = 0; i < min_length; ++i) {

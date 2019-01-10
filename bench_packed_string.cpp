@@ -1,5 +1,5 @@
-
 #include <celero/Celero.h>
+#include "random_string.hpp"
 #include "packed_string.hpp"
 
 CELERO_MAIN

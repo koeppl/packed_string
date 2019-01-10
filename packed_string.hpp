@@ -1,6 +1,8 @@
-//#include <glog/logging.h>
+// #include <glog/logging.h>
 #include "dcheck.hpp"
 #include <climits>
+#include <cstdint>
+#include <string>
 
 #ifdef NDEBUG
 DCHECK(static_assert(false)) // do not run DCHECKS if NDEBUG is on
@@ -30,7 +32,7 @@ constexpr uint_fast8_t two_fattest_number(const uint64_t &a, const uint64_t &b) 
 
 namespace packed_character {
 
-static constexpr size_t FIT_CHARS = sizeof(uint64_t)/sizeof(char);
+static constexpr std::size_t FIT_CHARS = sizeof(uint64_t)/sizeof(char);
 
 //! number of characters stored in packed_character a
 constexpr uint_fast8_t char_length(const uint64_t &a) {
@@ -43,7 +45,7 @@ constexpr uint_fast8_t longest_common_prefix(const uint64_t &a, const uint64_t &
 }
 
 //! retrieve character stored in packed_character
-__constexpr char character(const uint64_t& packed_character, const size_t& index) {
+__constexpr char character(const uint64_t& packed_character, const std::size_t& index) {
    DCHECK_LT(index, sizeof(uint64_t)/sizeof(char));
    return (packed_character >> (index * CHAR_BIT)) & UCHAR_MAX;
 }
@@ -58,15 +60,15 @@ constexpr uint64_t truncate(const uint64_t& packed_character, const uint_fast8_t
    return packed_character & ((-1ULL)>>(64-length*CHAR_BIT));
 }
 
-uint64_t construct(const char* str, size_t from) {
+uint64_t construct(const char* str, std::size_t from) {
    return reinterpret_cast<const uint64_t*>(str+from)[0];
 }
-uint64_t construct(const char* str, size_t from, uint_fast8_t length) {
+uint64_t construct(const char* str, std::size_t from, uint_fast8_t length) {
    DCHECK_GT(length,0);
    DCHECK_LE(length, FIT_CHARS);
    return truncate(construct(str,from), length);
 }
-uint64_t construct(const std::string& str, size_t from) {
+uint64_t construct(const std::string& str, std::size_t from) {
    DCHECK_LT(from, str.length());
    return (from+ CHAR_BIT <= str.length()) ? construct(str.c_str(), from) : construct(str.c_str(), from, str.length()-from);
 }
@@ -76,75 +78,5 @@ constexpr bool is_prefix(const uint64_t& a, const uint64_t& b) {
 }
 
 }//ns
-
-
-#include <algorithm>
-#include <iostream>
-#include <cstring>
-
-size_t random_size(const size_t& maxvalue) {
-   return static_cast<std::size_t>(std::rand() * (1.0 / (RAND_MAX + 1.0 )) * maxvalue);
-}
-
-struct random_char{
-    random_char(char const* range = "abcdefghijklmnopqrstuvwxyz0123456789")
-        : m_range(range), m_length(std::strlen(m_range)) { }
-
-    char operator ()() const {
-        return m_range[random_size(m_length)];
-    }
-
-private:
-    char const*const m_range;
-    const std::size_t m_length;
-};
-
-std::string random_string(const random_char& rnd_gen, size_t length) {
-	std::string s(length, '\0');
-	std::generate_n(s.begin(), length, rnd_gen);
-	// s[length] = '\0';
-	return s;
-}
-
-
-void test_packed_character(const std::string& input) {
-   const size_t packed_string_length = math::ceil_div(input.length(),packed_character::FIT_CHARS);
-   uint64_t* packed_string = new uint64_t[packed_string_length];
-   for(size_t i = 0; i < packed_string_length; ++i) {
-      packed_string[i] = packed_character::construct(input,i*packed_character::FIT_CHARS);
-      for(size_t j = 0; i*packed_character::FIT_CHARS+j < input.length() && j < packed_character::FIT_CHARS; ++j) {
-         DCHECK_EQ(packed_character::character(packed_string[i],j), input[i*packed_character::FIT_CHARS+j]);
-      }
-   }
-
-   //select a random packed char 
-   //
-   const size_t packed_index = random_size(input.length()/packed_character::FIT_CHARS);
-   const uint64_t packed_char = packed_string[packed_index];
-   const uint_fast8_t packed_length = packed_character::char_length(packed_char);
-   if(packed_length != packed_character::FIT_CHARS) {
-      DCHECK_EQ(packed_length, input.length()-(packed_string_length-1)*packed_character::FIT_CHARS);
-   }
-
-
-   const size_t begin  = random_size(packed_length);
-   const size_t length = random_size(packed_length-begin)+1;
-   const uint64_t sub_char = packed_character::substring(packed_char, begin, length);
-#ifndef NDEBUG
-   const uint_fast8_t sub_length = packed_character::char_length(sub_char);
-   DCHECK_EQ(sub_length, length);
-#endif
-
-   DCHECK_EQ(sub_char, packed_character::construct(input.c_str(),packed_index*packed_character::FIT_CHARS+begin, length));
-
-   // if(sub_length < length) {
-   //    DCHECK_EQ(packed_index, packed_string_length);
-   //    DCHECK_EQ(packed_character::char_length(sub_char), input.length() - (packed_string_length-1)*packed_character::FIT_CHARS);
-   // }
-   for(size_t j = 0; j < packed_character::char_length(sub_char); ++j) {
-      DCHECK_EQ(packed_character::character(sub_char, j), input[packed_index*packed_character::FIT_CHARS+begin+j]);
-   }
-   delete [] packed_string;
-}
 
 
