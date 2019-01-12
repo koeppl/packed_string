@@ -6,15 +6,20 @@ Currently, longest common prefix queries can be answered.
 
 # Longest Common Prefix Query
 
-Depending on the string length, a longest common prefix function is chosen that is geared towards
+Depending on the string length, a longest common prefix (lcp) function is chosen that is geared towards
 this string length. 
 We use the technique of word packing for comparision.
 This is either done by using the machine word size (64-bits), or vectorizing techniques of the SSE and AVX instruction sets.
 
 The following graph shows an evalution made with naive character comparison (`character`) and word-packing in machine word size (`packed`),
 or with the instruction sets `SSE2` and `AVX2`.
-![LCP Evaluation](https://raw.githubusercontent.com/koeppl/packed_string/master/images/lcp.svg)
+
+![](images/lcp.svg)
+
 The evaluation was conducted on an Intel Core i7-8550U CPU.
+
+An evaluation of all available lcp generates a new file `lcp_gen.cpp` providing a function `longest_common_prefix`, which
+selects the best function with respect to the string length.
 
 
 # Dependencies
