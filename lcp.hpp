@@ -1,5 +1,4 @@
 #include <iostream>
-#include "packed_string.hpp"
 #include <memory>
 
 namespace longest_common_prefix {

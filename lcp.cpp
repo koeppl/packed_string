@@ -1,4 +1,5 @@
 #include "lcp.hpp"
+#include "packed_string.hpp"
 #include <immintrin.h>
 
 namespace longest_common_prefix {
