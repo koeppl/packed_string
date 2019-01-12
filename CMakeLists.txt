@@ -15,7 +15,10 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mtune=native")
 ## lcp library
 
 add_executable  (precalc_lcp precalc_lcp.cpp)
-target_link_libraries(precalc_lcp pthread)
+# target_link_libraries(precalc_lcp)
+
+add_executable  (plot_lcp precalc_lcp_plot.cpp)
+# target_link_libraries(precalc_lcp_plot)
 
 add_custom_command (
 	OUTPUT "${CMAKE_BINARY_DIR}/lcp_gen.cpp"
