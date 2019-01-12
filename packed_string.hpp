@@ -1,4 +1,5 @@
-// #include <glog/logging.h>
+#pragma once
+
 #include "dcheck.hpp"
 #include <climits>
 #include <cstdint>
@@ -8,7 +9,7 @@
 DCHECK(static_assert(false)) // do not run DCHECKS if NDEBUG is on
 #define __constexpr constexpr
 #else
-#define __constexpr 
+#define __constexpr inline
 #endif
 
 
@@ -60,15 +61,15 @@ constexpr uint64_t truncate(const uint64_t& packed_character, const uint_fast8_t
    return packed_character & ((-1ULL)>>(64-length*CHAR_BIT));
 }
 
-uint64_t construct(const char* str, std::size_t from) {
+inline uint64_t construct(const char* str, std::size_t from) {
    return reinterpret_cast<const uint64_t*>(str+from)[0];
 }
-uint64_t construct(const char* str, std::size_t from, uint_fast8_t length) {
+inline uint64_t construct(const char* str, std::size_t from, uint_fast8_t length) {
    DCHECK_GT(length,0);
    DCHECK_LE(length, FIT_CHARS);
    return truncate(construct(str,from), length);
 }
-uint64_t construct(const std::string& str, std::size_t from) {
+inline uint64_t construct(const std::string& str, std::size_t from) {
    DCHECK_LT(from, str.length());
    return (from+ CHAR_BIT <= str.length()) ? construct(str.c_str(), from) : construct(str.c_str(), from, str.length()-from);
 }

@@ -1,39 +1,40 @@
 #include <celero/Celero.h>
-#include "lce.hpp"
-#include "lceinstance.hpp"
+#include "lcp.hpp"
+#include "lcpinstance.hpp"
 
 CELERO_MAIN
 
 
-class LCEFixture : public celero::TestFixture {
+
+class LCPFixture : public celero::TestFixture {
 
    const size_t m_instance_length;
 
    std::vector<celero::TestFixture::ExperimentValue> m_problemspace;
-   LCEInstance**const m_instances = nullptr;
+   LCPInstance**const m_instances = nullptr;
 
    size_t m_current_instance = 0;
 
 
    public:
 
-   const LCEInstance& instance() const {
+   const LCPInstance& instance() const {
       return *m_instances[m_current_instance];
    }
 
-   LCEFixture()
+   LCPFixture()
       : m_instance_length(8)
       , m_problemspace(m_instance_length,0)
-      , m_instances( new LCEInstance*[m_instance_length])
+      , m_instances( new LCPInstance*[m_instance_length])
    {
       for(size_t i = 0; i < m_instance_length; ++i) {
 	 m_problemspace[i] = {static_cast<int64_t>(i)};
 	 const size_t size = 6 + (2ULL<<(i+4));
-	 m_instances[i] = new LCEInstance(size, size-1);
+	 m_instances[i] = new LCPInstance(size, size-1);
 	 DCHECK_LT(static_cast<uint64_t>(m_problemspace[i].Value), m_instance_length);
       }
    }
-   ~LCEFixture() {
+   ~LCPFixture() {
       for(size_t i = 0; i < m_instance_length; ++i) {
 	delete [] m_instances[i];
       }
@@ -60,24 +61,27 @@ class LCEFixture : public celero::TestFixture {
 
 
 
-BASELINE_F(LCE, Naive, LCEFixture, 0, 10000)
-{
-   celero::DoNotOptimizeAway(longest_common_prefix_naive(instance().m_stra, instance().m_strb));
-}
+// BASELINE_F(LCP, Naive, LCPFixture, 0, 10000)
+// {
+//    celero::DoNotOptimizeAway(longest_common_prefix_naive(instance().m_stra, instance().m_strb));
+// }
 
-BENCHMARK_F(LCE, character, LCEFixture, 0, 10000)
+
+using namespace longest_common_prefix;
+
+BASELINE_F(LCP, character, LCPFixture, 0, 10000)
 {
    celero::DoNotOptimizeAway(longest_common_prefix_character(instance().m_stra, instance().m_length, instance().m_strb, instance().m_length));
 }
 
-BENCHMARK_F(LCE, packed, LCEFixture, 0, 10000)
+BENCHMARK_F(LCP, packed, LCPFixture, 0, 10000)
 {
    celero::DoNotOptimizeAway(longest_common_prefix_packed(instance().m_stra, instance().m_length, instance().m_strb, instance().m_length));
 }
 
 
 #ifdef __SSE2__ 
-BENCHMARK_F(LCE, sse, LCEFixture, 0, 10000)
+BENCHMARK_F(LCP, sse, LCPFixture, 0, 10000)
 {
    celero::DoNotOptimizeAway(longest_common_prefix_sse(instance().m_stra, instance().m_length, instance().m_strb, instance().m_length));
 }
@@ -85,7 +89,7 @@ BENCHMARK_F(LCE, sse, LCEFixture, 0, 10000)
 
 
 #ifdef __AVX2__
-BENCHMARK_F(LCE, avx2, LCEFixture, 0, 10000)
+BENCHMARK_F(LCP, avx2, LCPFixture, 0, 10000)
 {
    celero::DoNotOptimizeAway(longest_common_prefix_avx2(instance().m_stra, instance().m_length, instance().m_strb, instance().m_length));
 }

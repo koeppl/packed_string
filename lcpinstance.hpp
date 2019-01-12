@@ -1,7 +1,9 @@
 #pragma once
-#include "random_string.hpp"
 
-class LCEInstance {
+#include "random_string.hpp"
+#include <string>
+
+class LCPInstance {
    public:
       const size_t m_length;
       const size_t m_position;
@@ -10,7 +12,7 @@ class LCEInstance {
       size_t index;
 
       /** An instance to test, where there is a difference at position `position` in two random strings of the length `length` **/
-      LCEInstance(size_t length, size_t position)
+      LCPInstance(size_t length, size_t position)
 	 : m_length(length)
 	   , m_position(position)
 	   , m_stra(reinterpret_cast<char*>(aligned_alloc(32, m_length+1)))
@@ -25,7 +27,7 @@ class LCEInstance {
       m_stra[length] = m_strb[length] = 0;
       m_strb[m_position] = m_stra[m_position]+1;
    }
-      // ~LCEInstance() {
+      // ~LCPInstance() {
 	//  free(m_stra);
 	//  free(m_strb);
       // }

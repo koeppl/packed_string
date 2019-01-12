@@ -1,14 +1,7 @@
-#include <iostream>
-#include "packed_string.hpp"
+#include "lcp.hpp"
 #include <immintrin.h>
 
-size_t longest_common_prefix_naive(const char* a, const char* b) {
-   size_t i = 0;
-   for(; a[i] != 0 && b[i] != 0; ++i) {
-      if(a[i] != b[i]) return i;
-   }
-   return i == 0 ? 0 : i-1;
-}
+namespace longest_common_prefix {
 
 size_t longest_common_prefix_character(const char* a, const size_t a_length, const char* b, const size_t b_length) {
    const size_t min_length = std::min(a_length, b_length);
@@ -25,18 +18,27 @@ size_t longest_common_prefix_packed(const char* a, const size_t a_length, const 
       const uint64_t packed_a = packed_character::construct(a,pos);
       const uint64_t packed_b = packed_character::construct(b,pos);
       if(packed_a != packed_b) {
-	 DCHECK_EQ(packed_character::longest_common_prefix(packed_a, packed_b)+pos, longest_common_prefix_naive(a,b));
+	 DCHECK_EQ(packed_character::longest_common_prefix(packed_a, packed_b)+pos, 
+	       longest_common_prefix_character(a,a_length,b,b_length));
 	 return packed_character::longest_common_prefix(packed_a, packed_b)+pos;
       }
    }
    const size_t compared_chars = min_length*packed_character::FIT_CHARS;
+   if(compared_chars == std::min(a_length, b_length)) {
+      const size_t ret = min_length*packed_character::FIT_CHARS;
+      DCHECK_EQ(ret, longest_common_prefix_character(a,a_length,b,b_length));
+      return ret;
+   }
    const uint64_t packed_a = packed_character::construct(a,compared_chars,a_length - compared_chars);
    const uint64_t packed_b = packed_character::construct(b,compared_chars,b_length - compared_chars);
+   DCHECK_EQ(packed_character::char_length(packed_a), a_length - compared_chars);
+   DCHECK_EQ(packed_character::char_length(packed_b), b_length - compared_chars);
 
-   DCHECK_EQ(packed_character::longest_common_prefix(packed_a, packed_b), longest_common_prefix_naive(a+min_length*packed_character::FIT_CHARS, b+min_length*packed_character::FIT_CHARS));
+   DCHECK_EQ(packed_character::longest_common_prefix(packed_a, packed_b), 
+	 longest_common_prefix_character(a+compared_chars,a_length - compared_chars,  b+compared_chars, b_length - compared_chars));
 
    const size_t ret = min_length*packed_character::FIT_CHARS + packed_character::longest_common_prefix(packed_a, packed_b);
-   DCHECK_EQ(ret, longest_common_prefix_naive(a,b));
+   DCHECK_EQ(ret, longest_common_prefix_character(a,a_length,b,b_length));
    return ret;
 }
 
@@ -58,7 +60,7 @@ size_t longest_common_prefix_sse(const char*const a, const size_t a_length, cons
       }
       const size_t pos = __builtin_ctz(~mask);
       const size_t ret = length*register_size + pos;
-      DCHECK_EQ(ret, longest_common_prefix_naive(a, b));
+      DCHECK_EQ(ret, longest_common_prefix_character(a, a_length, b, b_length));
       return ret;
    }
    const size_t ret = length*register_size + 
@@ -67,7 +69,7 @@ size_t longest_common_prefix_sse(const char*const a, const size_t a_length, cons
 	    a_length - length*register_size, 
 	    b + length*register_size, 
 	    b_length - length*register_size);
-   DCHECK_EQ(ret, longest_common_prefix_naive(a, b));
+   DCHECK_EQ(ret, longest_common_prefix_character(a, a_length, b, b_length));
    return ret;
 }
 #endif //SSE2
@@ -93,7 +95,7 @@ size_t longest_common_prefix_avx2(const char*const a, const size_t a_length, con
       const uint64_t packed_a = packed_character::construct(a+length*register_size,(pos)*packed_character::FIT_CHARS);
       const uint64_t packed_b = packed_character::construct(b+length*register_size,(pos)*packed_character::FIT_CHARS);
       const size_t ret = length*register_size + packed_character::longest_common_prefix(packed_a, packed_b)+pos*packed_character::FIT_CHARS;
-      DCHECK_EQ(ret, longest_common_prefix_naive(a, b));
+      DCHECK_EQ(ret, longest_common_prefix_character(a, a_length, b, b_length));
       return ret;
    }
    const size_t ret = length*register_size + 
@@ -102,7 +104,7 @@ size_t longest_common_prefix_avx2(const char*const a, const size_t a_length, con
 	    a_length - length*register_size, 
 	    b + length*register_size, 
 	    b_length - length*register_size);
-   DCHECK_EQ(ret, longest_common_prefix_naive(a, b));
+   DCHECK_EQ(ret, longest_common_prefix_character(a, a_length, b, b_length));
    return ret;
 }
 #endif
@@ -129,7 +131,7 @@ size_t longest_common_prefix_avx512(const char*const a, const size_t a_length, c
       const uint64_t packed_a = packed_character::construct(a+length*register_size,(pos)*packed_character::FIT_CHARS);
       const uint64_t packed_b = packed_character::construct(b+length*register_size,(pos)*packed_character::FIT_CHARS);
       const size_t ret = length*register_size + packed_character::longest_common_prefix(packed_a, packed_b)+pos*packed_character::FIT_CHARS;
-      DCHECK_EQ(ret, longest_common_prefix_naive(a, b));
+      DCHECK_EQ(ret, longest_common_prefix_character(a, a_length, b, b_length));
       return ret;
    }
    const size_t ret = length*register_size + 
@@ -138,57 +140,9 @@ size_t longest_common_prefix_avx512(const char*const a, const size_t a_length, c
 	    a_length - length*register_size, 
 	    b + length*register_size, 
 	    b_length - length*register_size);
-   DCHECK_EQ(ret, longest_common_prefix_naive(a, b));
+   DCHECK_EQ(ret, longest_common_prefix_character(a, a_length, b, b_length));
    return ret;
 }
 #endif//avx512
 
-#include <memory>
-
-
-template<typename T, int alignment = 32>
-class aligned_allocator : public std::allocator <T> {
-public:
-     typedef size_t     size_type;
-     typedef ptrdiff_t  difference_type;
-     typedef T*         pointer;
-     typedef const T*   const_pointer;
-     typedef T&         reference;
-     typedef const T&   const_reference;
-     typedef T          value_type;
-
-
-     template<typename U>
-     struct rebind
-     {
-       typedef aligned_allocator <U> other; 
-     };
-
-     aligned_allocator() {}
-
-     template<typename U>
-     aligned_allocator(const aligned_allocator<U>&) {}
-
-     pointer allocate(size_type n, std::allocator<void>::const_pointer  = 0) {
-	return static_cast<pointer>(aligned_alloc(alignment, n*sizeof(T)));
-     }
-};
-
-
-
-
-//
-// int main() {
-//    using string_type = std::basic_string<char, std::char_traits<char>, aligned_allocator<char>>;
-//    std::basic_string<char, std::char_traits<char>, aligned_allocator<char>> a = "aaaafa";
-//    std::basic_string<char, std::char_traits<char>, aligned_allocator<char>> b = "aaaafbb";
-//    longest_common_prefix_sse(a.data(), a.length(), b.data(), b.length());
-//    // longest_common_prefix_avx512(a.data(), a.length(), b.data(), b.length());
-//    //
-//    //
-//    
-//       // std::cout << _mm_cmpistrc(ma, mb,  _SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_EACH | _SIDD_LEAST_SIGNIFICANT) << std::endl;
-//       // const unsigned int mask = _mm128_movemask_epi8(_mm128_cmpeq_epi64 (ma, mb));
-// }
-
-
+}//ns
