@@ -12,6 +12,7 @@ DCHECK(static_assert(false)) // do not run DCHECKS if NDEBUG is on
 #define __constexpr inline
 #endif
 
+namespace packed {
 
 namespace math {
 
@@ -31,7 +32,7 @@ constexpr uint_fast8_t two_fattest_number(const uint64_t &a, const uint64_t &b) 
 }
 }//ns
 
-namespace packed_character {
+namespace character {
 
 static constexpr std::size_t FIT_CHARS = sizeof(uint64_t)/sizeof(char);
 
@@ -78,6 +79,7 @@ constexpr bool is_prefix(const uint64_t& a, const uint64_t& b) {
    return longest_common_prefix(a, b) == char_length(b);
 }
 
-}//ns
+}//ns character
 
 
+}//ns packed

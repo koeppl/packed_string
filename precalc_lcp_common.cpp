@@ -1,12 +1,11 @@
 #include <iostream>
-#include "lcp.cpp"
+#include "packed/lcp.hpp"
 
 #include <chrono>
 #include <vector>
 
 
-using namespace longest_common_prefix;
-
+namespace packed {
 
 namespace math {
 
@@ -28,7 +27,8 @@ double deviation(const std::vector<T>& v, const double& mean) {
   return sum/v.size();
 }
 
-}
+}//ns math
+}//ns packed
 
 #include <thread>
 #include <functional>
@@ -57,7 +57,7 @@ using lce_function_type = size_t (*)(const char*, size_t, const char*, size_t);
   constexpr size_t MIN_SAMPLES = 10;
   constexpr size_t MIN_DEVIATION = 30;
 #endif
-std::pair<size_t,size_t> measure_lce(const aligned_string& text, const aligned_string& text_dup, const size_t length, const lce_function_type& lce_func) {
+std::pair<size_t,size_t> measure_lce(const packed::aligned_string& text, const packed::aligned_string& text_dup, const size_t length, const lce_function_type& lce_func) {
 
     std::vector<uint64_t> times;
     std::vector<uint64_t> res;
@@ -66,7 +66,7 @@ std::pair<size_t,size_t> measure_lce(const aligned_string& text, const aligned_s
     for(size_t i = 0; i < MAX_SAMPLES; ++i) {
       res.push_back(0);
 
-      res.back() = longest_common_prefix_sse(text.data(), length, text_dup.data(), length);
+      res.back() = lce_func(text.data(), length, text_dup.data(), length);
 
       using time_point = std::chrono::high_resolution_clock::time_point;
       time_point t1 = std::chrono::high_resolution_clock::now();
@@ -86,11 +86,11 @@ std::pair<size_t,size_t> measure_lce(const aligned_string& text, const aligned_s
 	times.erase(times.begin());
       }
       if(times.size() > MIN_SAMPLES) {
-	double deviation = math::deviation(times, math::arithmetic_mean(times));
+	double deviation = packed::math::deviation(times, packed::math::arithmetic_mean(times));
 	if(deviation < MIN_DEVIATION) break;
 	if(prev_deviation > deviation) break;
       }
-      prev_deviation = math::deviation(times, math::arithmetic_mean(times));
+      prev_deviation = packed::math::deviation(times, packed::math::arithmetic_mean(times));
     }
     // std::cout << "len " << length << " means " << math::arithmetic_mean(times) << " dev: " << math::deviation(times, math::arithmetic_mean(times)) << "LCE " << res.back() << std::endl;
     return std::make_pair(times[0], times.back());
@@ -111,16 +111,16 @@ const char*const lce_name[] =
 #endif
 };
   constexpr lce_function_type lce_function[] = 
-    { longest_common_prefix_character
-    , longest_common_prefix_packed
+    { packed::longest_common_prefix_character
+    , packed::longest_common_prefix_packed
 #ifdef __SSE2__
-    , longest_common_prefix_sse
+    , packed::longest_common_prefix_sse
 #endif
 #ifdef __AVX2__
-    , longest_common_prefix_avx2
+    , packed::longest_common_prefix_avx2
 #endif
 #ifdef __AVX512__
-    , longest_common_prefix_avx512
+    , packed::longest_common_prefix_avx512
 #endif
   };
   constexpr size_t lce_functions = sizeof(lce_function)/sizeof(lce_function_type);

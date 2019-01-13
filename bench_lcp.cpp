@@ -1,6 +1,7 @@
 #include <celero/Celero.h>
 #include "lcp.hpp"
 #include "lcpinstance.hpp"
+#include "dcheck.hpp"
 
 CELERO_MAIN
 
@@ -67,7 +68,7 @@ class LCPFixture : public celero::TestFixture {
 // }
 
 
-using namespace longest_common_prefix;
+using namespace packed;
 
 BASELINE_F(LCP, character, LCPFixture, 0, 10000)
 {

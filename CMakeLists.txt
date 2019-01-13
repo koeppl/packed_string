@@ -12,13 +12,10 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb -D_GLIBCXX_DEBUG -
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mtune=native")
 
 
-## lcp library
+## precalculation
 
 add_executable  (precalc_lcp precalc_lcp.cpp)
 # target_link_libraries(precalc_lcp)
-
-add_executable  (plot_lcp precalc_lcp_plot.cpp)
-# target_link_libraries(precalc_lcp_plot)
 
 add_custom_command (
 	OUTPUT "${CMAKE_BINARY_DIR}/lcp_gen.cpp"
@@ -26,16 +23,23 @@ add_custom_command (
 	COMMAND precalc_lcp "${CMAKE_BINARY_DIR}/lcp_gen.cpp"
 	DEPENDS precalc_lcp
 )
+ 
+## library
 
-add_library(packed_lcp SHARED
+add_library(packed_strings SHARED
 	lcp.cpp 
 	"${CMAKE_BINARY_DIR}/lcp_gen.cpp"
 	)
-target_include_directories(packed_lcp PUBLIC ${CMAKE_SOURCE_DIR})
+target_include_directories(packed_strings PUBLIC ${CMAKE_SOURCE_DIR})
 
-install(TARGETS packed_lcp LIBRARY DESTINATION lib)
-install(FILES lcp.hpp DESTINATION include)
+install(TARGETS packed_strings LIBRARY DESTINATION lib)
+install(FILES dcheck.hpp lcp.hpp character.hpp DESTINATION include/packed)
 
+
+## plots
+
+add_executable  (plot_lcp plot_lcp.cpp)
+target_link_libraries(plot_lcp packed_strings)
 
 
 ## BENCHMARKS
@@ -61,13 +65,13 @@ find_package(GTest)
 include_directories(${GTEST_INCLUDE_DIR})
 
 add_executable  (test_lcp test_lcp.cpp lcp.cpp)
-add_executable  (test_packed_string test_packed_string.cpp)
+add_executable  (test_character test_character.cpp)
 
 target_link_libraries(test_lcp gtest pthread)
-target_link_libraries(test_packed_string gtest pthread)
+target_link_libraries(test_character gtest pthread)
 
 enable_testing()
-add_test(NAME packed_string COMMAND test_packed_string)
+add_test(NAME character COMMAND test_character)
 add_test(NAME lcp COMMAND test_lcp)
 
 

@@ -1,7 +1,9 @@
+#pragma once 
+
 #include <iostream>
 #include <memory>
 
-namespace longest_common_prefix {
+namespace packed {
 
 size_t longest_common_prefix(const char* a, const size_t a_length, const char* b, const size_t b_length);
 

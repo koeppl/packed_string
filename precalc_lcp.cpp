@@ -1,4 +1,5 @@
 #include "precalc_lcp_common.cpp"
+#include "lcp.cpp"
 
 
 
@@ -13,8 +14,8 @@
 #endif
 
 std::vector<size_t> fill_best_until() {
-  const aligned_string text(TEXT_LENGTH, 'a');
-  const aligned_string text_dup(TEXT_LENGTH, 'a');
+  const packed::aligned_string text(TEXT_LENGTH, 'a');
+  const packed::aligned_string text_dup(TEXT_LENGTH, 'a');
   std::vector<size_t> best_until(lce_functions, 0);
 
 
@@ -88,7 +89,7 @@ int main(int argc, char *argv[]) {
 
   os << "#include \"lcp.hpp\"" << std::endl;
 
-  os << "namespace longest_common_prefix { " << std::endl;
+  os << "namespace packed { " << std::endl;
 
     os << "size_t longest_common_prefix(const char* a, const size_t a_length, const char* b, const size_t b_length) {" << std::endl;
 
@@ -96,12 +97,12 @@ int main(int argc, char *argv[]) {
       if(function_counter > 0 && best_until[function_counter-1] > best_until[function_counter]) continue; // skip if previous solution is better
       os << "constexpr size_t THRESHOLD_" << lce_name[function_counter] << " = " << best_until[function_counter] << ";" << std::endl;
     }
-
+    os << "const size_t min_length = std::min(a_length, b_length);" << std::endl;
 
 
     for(size_t function_counter = 0; function_counter < lce_functions-1; ++function_counter) {
       if(function_counter > 0 && best_until[function_counter-1] > best_until[function_counter]) continue; // skip if previous solution is better
-      os << "if(a_length < THRESHOLD_" << lce_name[function_counter] << ") { " << std::endl;
+      os << "if(min_length < THRESHOLD_" << lce_name[function_counter] << ") { " << std::endl;
       os << "return longest_common_prefix_" << lce_name[function_counter] << "(a, a_length, b, b_length);" << std::endl;
       os << "} else ";
     }
@@ -109,7 +110,7 @@ int main(int argc, char *argv[]) {
 
     os << "}" << std::endl;
 
-  os << "} //namespace longest_common_prefix " << std::endl;
+  os << "} //namespace packed " << std::endl;
     os << std::endl;
 
   return 0;

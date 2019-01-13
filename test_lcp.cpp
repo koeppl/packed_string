@@ -1,9 +1,9 @@
 #include <iostream>
-#include "lcp.hpp"
+#include "packed/lcp.hpp"
 #include "lcpinstance.hpp"
 #include <gtest/gtest.h>
 
-using namespace longest_common_prefix;
+using namespace packed;
 
 
 constexpr size_t TEST_LENGTH = 100;
