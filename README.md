@@ -1,8 +1,10 @@
 Packed String Library
 =====================
 
-The library constists of C++17 files for working with packed string.
-Currently, longest common prefix queries can be answered.
+This library consists of the following C++17 header files:
+
+- `character.hpp` for working with 64-bit packed characters. An example is given in the source file `example_character.cpp`.
+- `lcp.hpp` for answering longest common prefix queries.
 
 # Longest Common Prefix Query
 
@@ -21,6 +23,15 @@ The evaluation was conducted on an Intel Core i7-8550U CPU.
 An evaluation of all available lcp generates a new file `lcp_gen.cpp` providing a function `longest_common_prefix`, which
 selects the best function with respect to the string length.
 
+# Why
+
+Longest common prefix queries are fundamental, having several applications like
+
+- computing the LCP array 
+- computing the longest common extension `lcp(T[i..],T[j..])` can be speed up by using an LCE data structure. 
+  But these are only useful if the length is expected to be very long (> 2000 characters). 
+  Current CPU architectures featuring long cache lines and word sizes make character comparision by word packing a fast alternative to LCE data structures.
+
 
 # Dependencies
 
@@ -34,8 +45,7 @@ selects the best function with respect to the string length.
 # Installation
 
 This package ships as a library with a test program.
-Invoke `cmake` and `make` to compile, `make test` to test the compilation.
-
+Invoke `cmake` and `make` to compile, `make test` to test the compilation, and `make install` to install the library and the header files.
 
 
 # License

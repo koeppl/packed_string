@@ -111,6 +111,10 @@ size_t longest_common_prefix_avx2(const char*const a, const size_t a_length, con
 #endif
 
 #ifdef __AVX512__
+
+#pragma message ("Warning: the code for AVX512 has not been tested.") 
+// Sadly, I do not have a computer with AVX512 instructions
+
 size_t longest_common_prefix_avx512(const char*const a, const size_t a_length, const char*const b, const size_t b_length) {
    const size_t min_length = std::min(a_length, b_length);
    constexpr size_t register_size = 512/8;

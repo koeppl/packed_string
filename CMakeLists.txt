@@ -7,12 +7,14 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 set(CXX_STANDARD c++17)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -pedantic -march=native -std=${CXX_STANDARD} ")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -march=native -std=${CXX_STANDARD} ")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0 -ggdb")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mtune=native")
 
 
-## precalculation
+##########
+# precalculation
+##########
 
 add_executable  (precalc_lcp precalc_lcp.cpp)
 # target_link_libraries(precalc_lcp)
@@ -24,7 +26,9 @@ add_custom_command (
 	DEPENDS precalc_lcp
 )
  
-## library
+##########
+# library
+##########
 
 add_library(packed_strings SHARED
 	lcp.cpp 
@@ -36,13 +40,24 @@ install(TARGETS packed_strings LIBRARY DESTINATION lib)
 install(FILES dcheck.hpp lcp.hpp character.hpp DESTINATION include/packed)
 
 
-## plots
+##########
+# plots
+##########
 
 add_executable  (plot_lcp plot_lcp.cpp)
 target_link_libraries(plot_lcp packed_strings)
 
+##########
+# examples
+##########
 
-## BENCHMARKS
+add_executable  (example_character example_character.cpp)
+
+
+##########
+# BENCHMARKS
+##########
+
 set(NO_CELERO 0)
 find_path(CELERO_INCLUDE_DIR celero/Celero.h)
 find_library(CELERO_LIB libcelero.so)
@@ -59,7 +74,9 @@ if(NO_CELERO EQUAL 0)
 endif()
 
 
-## TESTS
+##########
+# TESTS
+##########
 
 find_package(GTest)
 include_directories(${GTEST_INCLUDE_DIR})
