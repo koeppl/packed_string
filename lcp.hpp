@@ -66,7 +66,13 @@ public:
      aligned_allocator(const aligned_allocator<U>&) {}
 
      pointer allocate(size_type n, std::allocator<void>::const_pointer  = 0) {
+#ifdef __APPLE__
+	pointer p;
+	posix_memalign(&p, alignment, n*sizeof(T));
+	return p;
+#else
 	return static_cast<pointer>(aligned_alloc(alignment, n*sizeof(T)));
+#endif
      }
 };
 
