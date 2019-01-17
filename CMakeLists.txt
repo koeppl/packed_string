@@ -79,17 +79,19 @@ endif()
 ##########
 
 find_package(GTest)
-include_directories(${GTEST_INCLUDE_DIR})
+if(GTest_FOUND)
+    include_directories(${GTEST_INCLUDE_DIR})
 
-add_executable  (test_lcp test_lcp.cpp lcp.cpp)
-add_executable  (test_character test_character.cpp)
+    add_executable  (test_lcp test_lcp.cpp lcp.cpp)
+    add_executable  (test_character test_character.cpp)
 
-target_link_libraries(test_lcp gtest pthread)
-target_link_libraries(test_character gtest pthread)
+    target_link_libraries(test_lcp gtest pthread)
+    target_link_libraries(test_character gtest pthread)
 
-enable_testing()
-add_test(NAME character COMMAND test_character)
-add_test(NAME lcp COMMAND test_lcp)
+    enable_testing()
+    add_test(NAME character COMMAND test_character)
+    add_test(NAME lcp COMMAND test_lcp)
+endif()
 
 
 MESSAGE( STATUS "With Celero?: " ${CELERO_INCLUDE_DIR} ${CELERO_LIB_DIR} )

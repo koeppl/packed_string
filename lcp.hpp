@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <memory>
+#include <cstdlib>
 
 namespace packed {
 
