@@ -44,7 +44,6 @@ void DoNotOptimizeAway(T&& x) { // copied from https://github.com/DigitalInBlue/
   }
 }
 
-using lce_function_type = size_t (*)(const char*, size_t, const char*, size_t);
 
 #ifdef NDEBUG
   constexpr size_t MEASUREMENTS = 1000;
@@ -57,7 +56,7 @@ using lce_function_type = size_t (*)(const char*, size_t, const char*, size_t);
   constexpr size_t MIN_SAMPLES = 10;
   constexpr size_t MIN_DEVIATION = 30;
 #endif
-std::pair<size_t,size_t> measure_lce(const packed::aligned_string& text, const packed::aligned_string& text_dup, const size_t length, const lce_function_type& lce_func) {
+std::pair<size_t,size_t> measure_lce(const packed::aligned_string& text, const packed::aligned_string& text_dup, const size_t length, const packed::lcp_function_type& lcp_func) {
 
     std::vector<uint64_t> times;
     std::vector<uint64_t> res;
@@ -66,13 +65,13 @@ std::pair<size_t,size_t> measure_lce(const packed::aligned_string& text, const p
     for(size_t i = 0; i < MAX_SAMPLES; ++i) {
       res.push_back(0);
 
-      res.back() = lce_func(text.data(), length, text_dup.data(), length);
+      res.back() = lcp_func(text.data(), text_dup.data(), length);
 
       using time_point = std::chrono::high_resolution_clock::time_point;
       time_point t1 = std::chrono::high_resolution_clock::now();
 
       for(size_t j = 0; j < MEASUREMENTS; ++j) {
-	DoNotOptimizeAway(lce_func(text.data(), length, text_dup.data(), length));
+	DoNotOptimizeAway(lcp_func(text.data(), text_dup.data(), length));
       }
 
       time_point t2 = std::chrono::high_resolution_clock::now();
@@ -97,7 +96,7 @@ std::pair<size_t,size_t> measure_lce(const packed::aligned_string& text, const p
 }
 
 
-const char*const lce_name[] =
+const char*const lcp_name[] =
   { "character"
   , "packed"
 #ifdef __SSE2__
@@ -110,7 +109,7 @@ const char*const lce_name[] =
   , "avx512"
 #endif
 };
-  constexpr lce_function_type lce_function[] = 
+  constexpr packed::lcp_function_type lcp_function[] = 
     { packed::longest_common_prefix_character
     , packed::longest_common_prefix_packed
 #ifdef __SSE2__
@@ -123,5 +122,5 @@ const char*const lce_name[] =
     , packed::longest_common_prefix_avx512
 #endif
   };
-  constexpr size_t lce_functions = sizeof(lce_function)/sizeof(lce_function_type);
+  constexpr size_t lcp_functions = sizeof(lcp_function)/sizeof(packed::lcp_function_type);
 

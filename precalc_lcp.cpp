@@ -16,21 +16,21 @@
 std::vector<size_t> fill_best_until() {
   const packed::aligned_string text(TEXT_LENGTH, 'a');
   const packed::aligned_string text_dup(TEXT_LENGTH, 'a');
-  std::vector<size_t> best_until(lce_functions, 0);
+  std::vector<size_t> best_until(lcp_functions, 0);
 
 
   size_t current_best_solution = 0;
   
   for(size_t length = 1; length < TEXT_LENGTH; ++length) {
-    uint64_t time_lower_bound[lce_functions];
-    uint64_t time_upper_bound[lce_functions];
-    for(size_t function_counter = 0; function_counter < lce_functions; ++function_counter) {
-      std::tie(time_lower_bound[function_counter], time_upper_bound[function_counter])  = measure_lce(text, text_dup, length, lce_function[function_counter]);
+    uint64_t time_lower_bound[lcp_functions];
+    uint64_t time_upper_bound[lcp_functions];
+    for(size_t function_counter = 0; function_counter < lcp_functions; ++function_counter) {
+      std::tie(time_lower_bound[function_counter], time_upper_bound[function_counter])  = measure_lce(text, text_dup, length, lcp_function[function_counter]);
     }
 
-    const size_t best_lower_solution = std::min_element(time_lower_bound,time_lower_bound+lce_functions) - time_lower_bound;
-    // const size_t best_upper_solution = std::min_element(time_upper_bound,time_upper_bound+lce_functions) - time_upper_bound;
-    // std::cout << lce_name[best_lower_solution] << " - " << lce_name[best_upper_solution] << std::endl;
+    const size_t best_lower_solution = std::min_element(time_lower_bound,time_lower_bound+lcp_functions) - time_lower_bound;
+    // const size_t best_upper_solution = std::min_element(time_upper_bound,time_upper_bound+lcp_functions) - time_upper_bound;
+    // std::cout << lcp_name[best_lower_solution] << " - " << lcp_name[best_upper_solution] << std::endl;
     if(current_best_solution < best_lower_solution && time_upper_bound[best_lower_solution] <  time_lower_bound[current_best_solution] ) {
       for(size_t solution = current_best_solution; solution <= best_lower_solution; ++solution) {
 	best_until[current_best_solution] = length;
@@ -38,7 +38,7 @@ std::vector<size_t> fill_best_until() {
     }
     current_best_solution = best_lower_solution;
     best_until[current_best_solution] = length;
-    if(current_best_solution == lce_functions-1) break;
+    if(current_best_solution == lcp_functions-1) break;
   }
   return best_until;
 }
@@ -52,17 +52,17 @@ int main(int argc, char *argv[]) {
   }
   std::ofstream os(argv[1]);
 
-  size_t best_until[lce_functions];
-  std::fill(best_until, best_until+lce_functions, 0);
+  size_t best_until[lcp_functions];
+  std::fill(best_until, best_until+lcp_functions, 0);
 
 
   std::vector<std::vector<size_t>> best_untils;
   for(size_t best_untils_counter = 0; best_untils_counter < ITERATIONS; ++best_untils_counter) {
     best_untils.emplace_back(fill_best_until());
-    size_t new_best_until[lce_functions];
-    std::fill(new_best_until, new_best_until+lce_functions, 0);
+    size_t new_best_until[lcp_functions];
+    std::fill(new_best_until, new_best_until+lcp_functions, 0);
     if(best_untils_counter > MIN_ITERATIONS) {
-      for(size_t function_counter = 0; function_counter < lce_functions; ++function_counter) {
+      for(size_t function_counter = 0; function_counter < lcp_functions; ++function_counter) {
 	std::vector<size_t> samples; 
 	for(size_t sample_counter = 0; sample_counter < best_untils.size(); ++sample_counter) {
 	  samples.push_back(best_untils[sample_counter][function_counter]);
@@ -71,14 +71,14 @@ int main(int argc, char *argv[]) {
 	new_best_until[function_counter] = samples[samples.size()/2]; // take median;
       }
       bool stagnate = true;
-      for(size_t function_counter = 0; function_counter < lce_functions; ++function_counter) {
+      for(size_t function_counter = 0; function_counter < lcp_functions; ++function_counter) {
 	if(best_until[function_counter] != new_best_until[function_counter]) {
 	  stagnate = false;
 	  break;
 	}
       }
       if(stagnate) break;
-      for(size_t function_counter = 0; function_counter < lce_functions; ++function_counter) {
+      for(size_t function_counter = 0; function_counter < lcp_functions; ++function_counter) {
 	best_until[function_counter] = new_best_until[function_counter];
       }
 
@@ -91,22 +91,20 @@ int main(int argc, char *argv[]) {
 
   os << "namespace packed { " << std::endl;
 
-    os << "size_t longest_common_prefix(const char* a, const size_t a_length, const char* b, const size_t b_length) {" << std::endl;
+    os << "size_t longest_common_prefix(const char*const a, const char*const b, const size_t length) {" << std::endl;
 
-    for(size_t function_counter = 0; function_counter < lce_functions-1; ++function_counter) {
+    for(size_t function_counter = 0; function_counter < lcp_functions-1; ++function_counter) {
       if(function_counter > 0 && best_until[function_counter-1] > best_until[function_counter]) continue; // skip if previous solution is better
-      os << "constexpr size_t THRESHOLD_" << lce_name[function_counter] << " = " << best_until[function_counter] << ";" << std::endl;
+      os << "constexpr size_t THRESHOLD_" << lcp_name[function_counter] << " = " << best_until[function_counter] << ";" << std::endl;
     }
-    os << "const size_t min_length = std::min(a_length, b_length);" << std::endl;
 
-
-    for(size_t function_counter = 0; function_counter < lce_functions-1; ++function_counter) {
+    for(size_t function_counter = 0; function_counter < lcp_functions-1; ++function_counter) {
       if(function_counter > 0 && best_until[function_counter-1] > best_until[function_counter]) continue; // skip if previous solution is better
-      os << "if(min_length < THRESHOLD_" << lce_name[function_counter] << ") { " << std::endl;
-      os << "return longest_common_prefix_" << lce_name[function_counter] << "(a, a_length, b, b_length);" << std::endl;
+      os << "if(length < THRESHOLD_" << lcp_name[function_counter] << ") { " << std::endl;
+      os << "return longest_common_prefix_" << lcp_name[function_counter] << "(a, b, length);" << std::endl;
       os << "} else ";
     }
-    os << "return longest_common_prefix_" << lce_name[lce_functions-1] << "(a, a_length, b, b_length);" << std::endl;
+    os << "return longest_common_prefix_" << lcp_name[lcp_functions-1] << "(a, b, length);" << std::endl;
 
     os << "}" << std::endl;
 
