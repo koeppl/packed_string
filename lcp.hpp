@@ -13,6 +13,8 @@ namespace packed {
  * Both strings a and b must be 32-byte aligned and are treated as 64-bit characters
  * @length number of characters to compare, which could be std::min(strlen(a),strlen(b))
  */
+size_t longest_common_prefix(const uint64_t* a, const uint64_t* b, const size_t length);
+
 size_t longest_common_prefix_character(const uint64_t*const a, const uint64_t*const b, const size_t length);
 
 #ifdef __SSE3__

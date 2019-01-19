@@ -72,19 +72,19 @@ using namespace packed;
 
 BASELINE_F(LCP, character, LCPFixture, 0, 10000)
 {
-   celero::DoNotOptimizeAway(longest_common_prefix_character(instance().m_stra, instance().m_length, instance().m_strb, instance().m_length));
+   celero::DoNotOptimizeAway(longest_common_prefix_character(instance().m_stra, instance().m_strb, instance().m_length));
 }
 
 BENCHMARK_F(LCP, packed, LCPFixture, 0, 10000)
 {
-   celero::DoNotOptimizeAway(longest_common_prefix_packed(instance().m_stra, instance().m_length, instance().m_strb, instance().m_length));
+   celero::DoNotOptimizeAway(longest_common_prefix_packed(instance().m_stra, instance().m_strb, instance().m_length));
 }
 
 
 #ifdef __SSE2__ 
 BENCHMARK_F(LCP, sse, LCPFixture, 0, 10000)
 {
-   celero::DoNotOptimizeAway(longest_common_prefix_sse(instance().m_stra, instance().m_length, instance().m_strb, instance().m_length));
+   celero::DoNotOptimizeAway(longest_common_prefix_sse(instance().m_stra, instance().m_strb, instance().m_length));
 }
 #endif //SSE2
 
@@ -92,7 +92,7 @@ BENCHMARK_F(LCP, sse, LCPFixture, 0, 10000)
 #ifdef __AVX2__
 BENCHMARK_F(LCP, avx2, LCPFixture, 0, 10000)
 {
-   celero::DoNotOptimizeAway(longest_common_prefix_avx2(instance().m_stra, instance().m_length, instance().m_strb, instance().m_length));
+   celero::DoNotOptimizeAway(longest_common_prefix_avx2(instance().m_stra, instance().m_strb, instance().m_length));
 }
 #endif //avx2
 

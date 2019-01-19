@@ -56,7 +56,10 @@ void DoNotOptimizeAway(T&& x) { // copied from https://github.com/DigitalInBlue/
   constexpr size_t MIN_SAMPLES = 10;
   constexpr size_t MIN_DEVIATION = 30;
 #endif
-std::pair<size_t,size_t> measure_lce(const packed::aligned_string& text, const packed::aligned_string& text_dup, const size_t length, const packed::lcp_function_type& lcp_func) {
+
+
+template<class experiment_type>
+std::pair<size_t,size_t> experiment(experiment_type exp) {
 
     std::vector<uint64_t> times;
     std::vector<uint64_t> res;
@@ -65,13 +68,13 @@ std::pair<size_t,size_t> measure_lce(const packed::aligned_string& text, const p
     for(size_t i = 0; i < MAX_SAMPLES; ++i) {
       res.push_back(0);
 
-      res.back() = lcp_func(text.data(), text_dup.data(), length);
+      res.back() = exp();
 
       using time_point = std::chrono::high_resolution_clock::time_point;
       time_point t1 = std::chrono::high_resolution_clock::now();
 
       for(size_t j = 0; j < MEASUREMENTS; ++j) {
-	DoNotOptimizeAway(lcp_func(text.data(), text_dup.data(), length));
+	DoNotOptimizeAway(exp);
       }
 
       time_point t2 = std::chrono::high_resolution_clock::now();
@@ -124,3 +127,58 @@ const char*const lcp_name[] =
   };
   constexpr size_t lcp_functions = sizeof(lcp_function)/sizeof(packed::lcp_function_type);
 
+
+
+const char*const lcp64_name[] =
+  { "character"
+#ifdef __SSE3__
+  , "sse"
+#endif
+#ifdef __AVX2__
+  , "avx2"
+#endif
+};
+  constexpr packed::lcp64_function_type lcp64_function[] = 
+    { packed::longest_common_prefix_character
+#ifdef __SSE3__
+    , packed::longest_common_prefix_sse
+#endif
+#ifdef __AVX2__
+    , packed::longest_common_prefix_avx2
+#endif
+  };
+  constexpr size_t lcp64_functions = sizeof(lcp64_function)/sizeof(packed::lcp64_function_type);
+
+
+struct lcp_experiment {
+  using function_type = packed::lcp_function_type;
+
+    const packed::aligned_string& text;
+    const packed::aligned_string& text_dup;
+    const size_t length;
+    const function_type& lcp_func;
+
+    static constexpr size_t function_array_size = lcp_functions;
+    static constexpr auto function_array = lcp_function;
+
+    size_t operator()() const {
+      return lcp_func(text.data(), text_dup.data(), length);
+    }
+
+};
+struct lcp64_experiment {
+  using function_type = packed::lcp64_function_type;
+
+    const packed::aligned_string& text;
+    const packed::aligned_string& text_dup;
+    const size_t length;
+    const function_type& lcp_func;
+
+    static constexpr auto function_array = lcp64_function;
+    static constexpr size_t function_array_size = lcp64_functions;
+
+    size_t operator()() const {
+      return lcp_func(reinterpret_cast<const uint64_t*>(text.data()), reinterpret_cast<const uint64_t*>(text_dup.data()), length/sizeof(uint64_t));
+    }
+
+};

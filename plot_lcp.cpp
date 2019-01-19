@@ -54,12 +54,14 @@ os_gnu << std::endl;
       for(size_t function_counter = 0; function_counter < lcp_functions; ++function_counter) {
 	uint64_t time_lower_bound;
 	uint64_t time_upper_bound;
-	std::tie(time_lower_bound, time_upper_bound)  = measure_lce(text, text_dup, length, lcp_function[function_counter]);
+	lcp_experiment exp { text, text_dup, length, lcp_function[function_counter] };
+	std::tie(time_lower_bound, time_upper_bound)  = experiment(exp);
 	os_plot << '\t' << (static_cast<double>(time_lower_bound)/MEASUREMENTS) << "\t" << (static_cast<double>(time_upper_bound)/MEASUREMENTS);
     }
 	uint64_t time_lower_bound;
 	uint64_t time_upper_bound;
-	std::tie(time_lower_bound, time_upper_bound)  = measure_lce(text, text_dup, length, packed::longest_common_prefix);
+	lcp_experiment exp { text, text_dup, length, packed::longest_common_prefix };
+	std::tie(time_lower_bound, time_upper_bound)  = experiment(exp);
 	os_plot << '\t' << (static_cast<double>(time_lower_bound)/MEASUREMENTS) << "\t" << (static_cast<double>(time_upper_bound)/MEASUREMENTS);
   os_plot << std::endl;
 

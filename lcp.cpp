@@ -38,7 +38,7 @@ size_t longest_common_prefix_sse(const uint64_t*const a, const uint64_t*const b,
 	 DCHECK_EQ(ret, longest_common_prefix_character(a, b, length));
 	 return ret;
       }
-      const size_t ret = c_length * register_size + mask & 1; // since we compared only two 64-bit integers, we check whether the leftmost one is set
+      const size_t ret = c_length * register_size + (mask & 1); // since we compared only two 64-bit integers, we check whether the leftmost one is set
       DCHECK_EQ(ret, longest_common_prefix_character(a, b, length));
       return ret;
    }
