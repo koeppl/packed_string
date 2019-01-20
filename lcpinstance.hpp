@@ -2,6 +2,7 @@
 
 #include "random_string.hpp"
 #include <string>
+#include "lcp.hpp"
 
 class LCPInstance {
    public:
@@ -15,8 +16,8 @@ class LCPInstance {
       LCPInstance(size_t length, size_t position)
 	 : m_length(length)
 	   , m_position(position)
-	   , m_stra(reinterpret_cast<char*>(aligned_alloc(32, m_length+1)))
-	   , m_strb(reinterpret_cast<char*>(aligned_alloc(32, m_length+1)))
+	   , m_stra(packed::aligned_allocator<char>::allocate(m_length+1))
+	   , m_strb(packed::aligned_allocator<char>::allocate(m_length+1))
 
    {
       random_char rnd_gen;
@@ -27,9 +28,9 @@ class LCPInstance {
       m_stra[length] = m_strb[length] = 0;
       m_strb[m_position] = m_stra[m_position]+1;
    }
-      // ~LCPInstance() {
-	//  free(m_stra);
-	//  free(m_strb);
-      // }
+   ~LCPInstance() {
+      packed::aligned_allocator<char>::deallocate(m_stra, m_length+1);
+      packed::aligned_allocator<char>::deallocate(m_strb, m_length+1);
+      }
 
 };

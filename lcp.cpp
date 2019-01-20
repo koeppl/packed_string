@@ -1,6 +1,10 @@
 #include "packed/lcp.hpp"
 #include "packed/character.hpp"
+
+#ifdef __SSE__
 #include <immintrin.h>
+#endif
+
 
 namespace packed {
 

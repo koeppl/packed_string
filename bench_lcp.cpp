@@ -37,7 +37,7 @@ class LCPFixture : public celero::TestFixture {
    }
    ~LCPFixture() {
       for(size_t i = 0; i < m_instance_length; ++i) {
-	delete [] m_instances[i];
+	delete m_instances[i];
       }
       delete [] m_instances;
    }

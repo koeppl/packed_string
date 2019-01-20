@@ -4,6 +4,10 @@
 #include <memory>
 #include <cstdlib>
 
+#ifdef __SSE__
+#include <xmmintrin.h>
+#endif
+
 namespace packed {
 
 /**
@@ -117,8 +121,12 @@ public:
      template<typename U>
      aligned_allocator(const aligned_allocator<U>&) {}
 
-     pointer allocate(size_type n, std::allocator<void>::const_pointer  = 0) {
-#ifdef __APPLE__
+     static pointer allocate(size_type n, std::allocator<void>::const_pointer  = 0) {
+#ifdef __SSE__
+	     return static_cast<pointer>(_mm_malloc(n*sizeof(T), alignment));
+#elif defined(_MSC_VER)
+	     return static_cast<pointer>(_aligned_malloc(size, align));
+#elif defined(__APPLE__)
 	pointer p;
 	posix_memalign(reinterpret_cast<void**>(&p), alignment, n*sizeof(T));
 	return p;
@@ -126,6 +134,18 @@ public:
 	return static_cast<pointer>(aligned_alloc(alignment, n*sizeof(T)));
 #endif
      }
+     static void deallocate( T* p, [[maybe_unused]] std::size_t n) {
+#ifdef __SSE__
+	     _mm_free(p);
+#elif defined(_MSC_VER)
+	     _aligned_free(p);
+#else
+	     free(p);
+#endif
+     }
+
+
+
 };
 
 //! specialization of std::string to make the underlying char*-string 32-byte aligned
