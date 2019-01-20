@@ -99,6 +99,9 @@ TEST(LCP64_off, sse) {  test64_lcp_offset(longest_common_prefix_sse); }
 #endif
 
 #ifdef __AVX2__
+TEST(LCP, avx2_8) {  test_lcp(longest_common_prefix_avx2_8); }
+TEST(LCPeq, avx2_8) {  test_eq(longest_common_prefix_avx2_8); }
+
 TEST(LCP, avx2) {  test_lcp(longest_common_prefix_avx2); }
 TEST(LCPeq, avx2) {  test_eq(longest_common_prefix_avx2); }
 

@@ -136,7 +136,37 @@ size_t longest_common_prefix_sse(const char*const a, const char*const b, const s
 }
 #endif //SSE2
 
+
 #ifdef __AVX2__
+
+size_t longest_common_prefix_avx2_8(const char*const a, const char*const b, const size_t length) {
+   constexpr size_t register_size = 256/8;
+   size_t c_length = 0; // c_length in register_size units
+   for(; c_length < length / register_size; ++c_length) {
+      __m256i ma = _mm256_load_si256((__m256i*)(a+c_length*register_size)); 
+      __m256i mb = _mm256_load_si256((__m256i*)(b+c_length*register_size)); 
+      const unsigned int mask = _mm256_movemask_epi8(_mm256_cmpeq_epi8(ma, mb));
+      if(~mask == 0) {
+	 continue;
+      }
+      if(mask == 0) {
+	 return c_length == 0 ?  0 : (c_length-1)*register_size;
+      }
+      const size_t pos = __builtin_ctz(~mask);
+
+      const size_t ret = c_length*register_size + pos;
+      DCHECK_EQ(ret, longest_common_prefix_character(a, b, length));
+      return ret;
+   }
+   const size_t ret = c_length*register_size + 
+      longest_common_prefix_packed(
+	    a + c_length*register_size,
+	    b + c_length*register_size, 
+	    length - c_length*register_size);
+   DCHECK_EQ(ret, longest_common_prefix_character(a, b, length));
+   return ret;
+}
+
 size_t longest_common_prefix_avx2(const char*const a, const char*const b, const size_t length) {
    constexpr size_t register_size = 256/8;
    size_t c_length = 0; // c_length in register_size units

@@ -106,6 +106,7 @@ const char*const lcp_name[] =
   , "sse"
 #endif
 #ifdef __AVX2__
+  , "avx2_8"
   , "avx2"
 #endif
 #ifdef __AVX512__
@@ -119,6 +120,7 @@ const char*const lcp_name[] =
     , packed::longest_common_prefix_sse
 #endif
 #ifdef __AVX2__
+    , packed::longest_common_prefix_avx2_8
     , packed::longest_common_prefix_avx2
 #endif
 #ifdef __AVX512__

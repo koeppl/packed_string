@@ -18,11 +18,18 @@ size_t longest_common_prefix(const uint64_t* a, const uint64_t* b, const size_t 
 size_t longest_common_prefix_character(const uint64_t*const a, const uint64_t*const b, const size_t length);
 
 #ifdef __SSE3__
+/**
+ * uses _mm256_cmpeq_epi64 to compare 64-bit packed characters, and resorts to longest_common_prefix_packed for the final packed character
+ */
 size_t longest_common_prefix_sse(const uint64_t*const a, const uint64_t*const b, const size_t length);
 #endif
 
 #ifdef __AVX2__
 size_t longest_common_prefix_avx2(const uint64_t*const a, const uint64_t*const b, const size_t length);
+/**
+ * uses _mm256_cmpeq_epi8 to compare 8-bit characters in blocks of 256 bit
+ */
+size_t longest_common_prefix_avx2_8(const char*const a, const char*const b, const size_t length);
 #endif
 
 

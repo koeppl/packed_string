@@ -90,6 +90,10 @@ BENCHMARK_F(LCP, sse, LCPFixture, 0, 10000)
 
 
 #ifdef __AVX2__
+BENCHMARK_F(LCP, avx2s, LCPFixture, 0, 10000)
+{
+   celero::DoNotOptimizeAway(longest_common_prefix_avx2_8(instance().m_stra, instance().m_strb, instance().m_length));
+}
 BENCHMARK_F(LCP, avx2, LCPFixture, 0, 10000)
 {
    celero::DoNotOptimizeAway(longest_common_prefix_avx2(instance().m_stra, instance().m_strb, instance().m_length));
